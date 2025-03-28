@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet ,Image} from 'react-native';
-import { SafeAreaView } from 'react-native-web';
+// import { SafeAreaView } from 'react-native-web';
+import { Alert } from 'react-native';
 const LoginScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true); 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const API_URL = 'http://127.0.0.1:3001'; 
-
-  async function handleAuth() {
+  const API_URL = 'http://192.168.1.42:3001'; 
+  async function handleLogin() {
     const endpoint = isLogin ? '/login' : '/signup';
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
@@ -15,7 +15,6 @@ const LoginScreen = ({ navigation }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await response.json();
       if (response.ok) {
         Alert.alert(isLogin ? 'Login Successful' : 'Signup Successful', data.message);
@@ -25,12 +24,15 @@ const LoginScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error:', error);
-      Alert.alert('Network Error', 'Please try again later.');
+      Alert.alert('Network Error',);
     }
+  }
+  function toggle(){
+    setIsLogin((prev) =>!prev);
   }
   return (
     <View style={styles.container}> 
-    <Image source={require('./assets/icon.png')} style={styles.logo}/>
+    <Image source={require('./assets/story-removebg-preview(2).png')} style={styles.logo}/>
       <Text style={styles.title}>{isLogin ? 'Login' : 'Signup'}</Text>
 
       <TextInput
@@ -59,7 +61,7 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>{isLogin ? 'Login' : 'Signup'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={toggleForm}>
+      <TouchableOpacity onPress={toggle}>
         <Text style={styles.link}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <Text style={{ textDecorationLine: 'underline', color: '#9F7AEA' }}>
