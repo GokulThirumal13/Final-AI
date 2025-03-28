@@ -1,16 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const Groq = require('groq-sdk');
+const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const GROQ = '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';
-// const ElevenLabs= 'sk_dd030de76fe56c336790afaad64452effc44375284387ef3';
-// const ElevenLabs_voice = 'pNInz6obpgDQGcFmaJgB'; 
-const model_id = 'llama-3.1-8b-instant';
 
+const model_id = 'llama-3.1-8b-instant';
+const api='sk_53f0213bc36b40ea44d11e06352209ce19f7a6585b10c67b';
+const id='21m00Tcm4TlvDq8ikWAM'
 const groq = new Groq({ apiKey: GROQ });
 
 app.post('/generate-story', async (req, res) => {
@@ -24,12 +27,12 @@ app.post('/generate-story', async (req, res) => {
         if (!story) {
             return res.status(500).json({ error: 'Failed to generate story' });
         }
-        // const audioBuffer = await convertTextToSpeech(story);
-        // if (!audioBuffer) {
-        //     return res.status(500).json({ error: 'Failed to generate audio' });
-        // }
+        const audio = await convertTextToSpeech(story);
+        if (!audio) {
+            return res.status(500).json({ error: 'Failed to generate audio' });
+        }
 
-        res.json({ story });
+        res.json({ story, audio });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -64,35 +67,33 @@ async function getLlamaResponse(prompt) {
     }
 }
 
-// async function convertTextToSpeech(text) {
-//     try {
-//         const response = await fetch(`https://api.elevenlabs.io/v1/tts/${ElevenLabs_voice}`, {
-//             method: 'POST',
-//             headers: {
-//                 'Accept': 'audio/mpeg',
-//                 'Content-Type': 'application/json',
-//                 'xi-api-key': ElevenLabs
-//             },
-//             body: JSON.stringify({
-//                 text: text,
-//                 model_id: "eleven_multilingual_v2",
-//                 voice_settings: {
-//                     stability: 0.5,
-//                     similarity_boost: 0.8
-//                 }
-//             })
-//         });
 
-//         if (!response.ok) {
-//             throw new Error(`ElevenLabs API error: ${response.statusText}`);
-//         }
+async function convertTextToSpeech(text) {
+    try {
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'xi-api-key': api,
+            },
+            body: JSON.stringify({ text })
+        });
 
-//         return await response.buffer(); 
-//     } catch (error) {
-//         console.error("Error in convertTextToSpeech:", error);
-//         return null;
-//     }
-// }
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        
+        const audioBuffer = await response.arrayBuffer();
+
+        return audioBuffer;
+    } catch (error) {
+        console.error('Error in convertTextToSpeech:', error);
+        throw error;
+    }
+};
+
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
